@@ -35,6 +35,7 @@ def get_icon_name(category, artifact):
         else:                           icon = 'chrome'
     elif category == 'DEVICE INFO':     
         if artifact == 'BUILD INFO':    icon = 'terminal'
+        elif artifact == 'IOS SYSTEM VERSION':          icon = 'git-commit'
         elif artifact == 'PARTNER SETTINGS':    icon = 'settings'
         elif artifact.find('SETTINGS_SECURE_') >= 0:    icon = 'settings'
         else:                           icon = 'info'
@@ -64,17 +65,19 @@ def get_icon_name(category, artifact):
     elif category == 'IOS BUILD':       icon = 'git-commit'
     elif category == 'IOS SCREENS':       icon = 'maximize'
     elif category == 'POWERLOG':       icon = 'power'
+    elif category == 'POWERLOG BACKUPS':       icon = 'power'
     elif category == 'DHCP':       icon = 'settings'
     elif category == 'NOTIFICATIONS':     icon = 'bell'
     elif category == 'CELLULAR WIRELESS':     icon = 'bar-chart'
     elif category == 'SAFARI BROWSER':     icon = 'compass'
-    elif category == 'LOCATIOND':     icon = 'map-pin'
+    elif category == 'LOCATIONS':     icon = 'map-pin'
     elif category == 'IOS MAIL':     icon = 'mail'
     elif category == 'SCREENTIME':     icon = 'monitor'
     elif category == 'BLUETOOTH':     icon = 'bluetooth'
     elif category == 'ROUTINED':     icon = 'map'
     elif category == 'CALENDAR':     icon = 'calendar'
     elif category == 'PHOTOS':     icon = 'image'
+    elif category == 'WIRELESS NETWORKS':     icon = 'wifi'
     elif category == 'INTERACTIONC':
          if artifact == 'CONTACTS':  icon = 'user'   
     elif category == 'KNOWLEDGEC':     
@@ -88,6 +91,29 @@ def get_icon_name(category, artifact):
         if artifact == 'LOCK STATE':  icon = 'lock'
         if artifact == 'PLUGGED IN':  icon = 'battery-charging'
     elif category == 'HEALTH DATA':             icon = 'heart'
+    elif category == 'MOBILE ACTIVATION LOGS':    icon = 'clipboard'
+    elif category == 'MOBILE BACKUP':       icon = 'save'
+    elif category == 'MOBILE CONTAINER MANAGER':       icon = 'save'
+    elif category == 'APP CONDUIT':       icon = 'activity'
+    elif category == 'APP UPDATES':         icon = 'codepen'
+    elif category == 'MEDIA LIBRARY':         icon = 'play-circle'
+    elif category == 'FILES APP':         icon = 'file-text'
+    elif category == 'ICLOUD SHARED ALBUMS':         icon = 'cloud'
+    elif category == 'DISCORD':         
+        if artifact == 'DISCORD MESSAGES':        icon = 'message-square'
+        if artifact == 'DISCORD ACCOUNT':        icon = 'user'
+        if artifact == 'DISCORD MANIFEST':        icon = 'file-text'
+    elif category == 'KIK':         
+        if artifact == 'KIK MESSAGES':        icon = 'message-square'
+    elif category == 'WIFI CONNECTIONS':         
+        if artifact == 'ICLOUD WIFI NETWORKS':        icon = 'wifi'
+        elif artifact == 'WIFI':        icon = 'wifi'
+        elif artifact == 'WIFI PLIST':       icon = 'save'
+    elif category == 'GEOLOCATION':
+        if artifact == 'APPLICATIONS': icon = 'grid'
+        elif artifact == 'MAP TILE CACHE': icon = 'map'
+        elif artifact == 'PD PLACE CACHE': icon = 'map-pin'
+
     return icon
     
 def generate_report(reportfolderbase, time_in_secs, time_HMS, extraction_type, image_input_path):
@@ -162,16 +188,13 @@ def generate_report(reportfolderbase, time_in_secs, time_HMS, extraction_type, i
     create_index_html(reportfolderbase, time_in_secs, time_HMS, extraction_type, image_input_path, nav_list_data)
     elements_folder = os.path.join(reportfolderbase, '_elements')
     os.mkdir(elements_folder)
-    
-    __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-    
-    
-    #print(str(os.path.join(__location__,"logo.jpg")))
-    #logfunc(str(os.path.join(__location__,"logo.jpg")))
+    __location__ = os.path.dirname(os.path.abspath(__file__))
     
     shutil.copy2(os.path.join(__location__,"logo.jpg"), elements_folder)
     shutil.copy2(os.path.join(__location__,"dashboard.css"), elements_folder)
     shutil.copy2(os.path.join(__location__,"feather.min.js"), elements_folder)
+    shutil.copy2(os.path.join(__location__,"dark-mode.css"), elements_folder)
+    shutil.copy2(os.path.join(__location__,"dark-mode-switch.js"), elements_folder)
     shutil.copytree(os.path.join(__location__,"MDB-Free_4.13.0"), os.path.join(elements_folder, 'MDB-Free_4.13.0'))
 
 def get_file_content(path):
@@ -184,7 +207,7 @@ def create_index_html(reportfolderbase, time_in_secs, time_HMS, extraction_type,
     '''Write out the index.html page to the report folder'''
     content = '<br />'
     content += """
-    <div class="card " style="padding: 20px;">
+    <div class="card bg-white" style="padding: 20px;">
         <h2 class="card-title">Case Information</h2>
     """ # CARD start
     
@@ -215,11 +238,7 @@ def create_index_html(reportfolderbase, time_in_secs, time_HMS, extraction_type,
 
     content += '</div>' # CARD end
 
-    authors_data = ''
-    for author in aleapp_contributors:
-        authors_data += individual_contributor.format(author[0], author[1], 
-                        ('https://twitter.com/' + author[2]) if author[2] else '',
-                        author[3])
+    authors_data = generate_authors_table_code(aleapp_contributors)
     credits_code = credits_block.format(authors_data)
 
     # WRITE INDEX.HTML LAST
@@ -239,6 +258,26 @@ def create_index_html(reportfolderbase, time_in_secs, time_HMS, extraction_type,
     f.write(credits_code)
     f.write(body_main_trailer + body_end + page_footer)
     f.close()
+
+def generate_authors_table_code(aleapp_contributors):
+    authors_data = ''
+    for author_name, blog, tweet_handle, git in aleapp_contributors:
+        author_data = ''
+        if blog:
+            author_data += f'<a href="{blog}" target="_blank">{blog_icon}</a> &nbsp;\n'
+        else:
+            author_data += f'{blank_icon} &nbsp;\n'
+        if tweet_handle:
+            author_data += f'<a href="https://twitter.com/{tweet_handle}" target="_blank">{twitter_icon}</a> &nbsp;\n'
+        else:
+            author_data += f'{blank_icon} &nbsp;\n'
+        if git:
+            author_data += f'<a href="{git}" target="_blank">{github_icon}</a>\n'
+        else:
+            author_data += f'{blank_icon}'
+
+        authors_data += individual_contributor.format(author_name, author_data)
+    return authors_data
 
 def generate_key_val_table_without_headings(title, data_list, html_escape=True, width="70%"):
     '''Returns the html code for a key-value table (2 cols) without col names'''

@@ -24,10 +24,12 @@ def ValidateInput(values, window):
     elif not os.path.exists(i_path):
         sg.PopupError('INPUT file/folder does not exist!')
         return False, ext_type
+    elif os.path.isdir(i_path) and os.path.exists(os.path.join(i_path, "Manifest.db")):
+        ext_type = 'itunes'
     elif os.path.isdir(i_path):
         ext_type = 'fs'
     else: # must be an existing file then
-        if not i_path.lower().endswith('.tar') and not i_path.lower().endswith('.zip'):
+        if not i_path.lower().endswith('.tar') and not i_path.lower().endswith('.zip') and not i_path.lower().endswith('.gz'):
             sg.PopupError('Input file is not a supported archive! ', i_path)
             return False, ext_type
         else:
@@ -53,18 +55,19 @@ def ValidateInput(values, window):
 def CheckList(mtxt, lkey, mdstring, disable=False):
     return [sg.CBox(mtxt, default=True, key=lkey, metadata=mdstring, disabled=disable)]
 
-# verify module (.py) file exists; only then add it to the "list"
 def pickModules():
     global indx
     global mlist
     
     script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'scripts', 'artifacts')
 
+    # Create sorted dict from 'tosearch' dictionary based on plugin category
+    sorted_tosearch = {k: v for k, v in sorted(tosearch.items(), key=lambda item: item[1][0].upper())}
+
     indx = 1000     # arbitrary number to not interfere with other controls
-    for key, val in tosearch.items():
-        plugin_path = os.path.join(script_path, key + '.py')
-        disabled = False if key != 'lastBuild' else True # lastBuild.py is REQUIRED
-        mlist.append( CheckList(key + '.py [' + val[0] + ']', indx, key, disabled) )
+    for key, val in sorted_tosearch.items():
+        disabled = False if key != 'lastBuild' else True # lastBuild is REQUIRED
+        mlist.append( CheckList(val[0] + f' [{key}]', indx, key, disabled) )
         indx = indx + 1
         
 sg.theme('DarkAmber')   # Add a touch of color
@@ -77,7 +80,7 @@ pickModules()
 GuiWindow.progress_bar_total = len(ileapp.tosearch)
 
 
-layout = [  [sg.Text('iOS Logs, Events, And Properties Parser', font=("Helvetica", 22))],
+layout = [  [sg.Text('iOS Logs, Events, And Plists Parser', font=("Helvetica", 22))],
             [sg.Text('https://github.com/abrignoni/iLEAPP', font=("Helvetica", 14))],
             [sg.Frame(layout=[
                     [sg.Input(size=(97,1)), 
@@ -128,45 +131,40 @@ while True:
             if is_platform_windows():
                 if input_path[1] == ':' and extracttype =='fs': input_path = '\\\\?\\' + input_path.replace('/', '\\')
                 if output_folder[1] == ':': output_folder = '\\\\?\\' + output_folder.replace('/', '\\')
-            
+
             # re-create modules list based on user selection
-            search_list = {}
+            search_list = { 'lastBuild' : tosearch['lastBuild'] } # hardcode lastBuild as first item
             s_items = 0
             for x in range(1000,indx):
                 if window.FindElement(x).Get():
-                    if window[x].metadata in tosearch:
-                        search_list[window[x].metadata] = tosearch[window[x].metadata]
-                        s_items = s_items + 1 #for progress bar
+                    key = window[x].metadata
+                    if (key in tosearch) and (key != 'lastBuild'):
+                        search_list[key] = tosearch[key]
+                    s_items = s_items + 1 # for progress bar
                 
                 # no more selections allowed
                 window[x].Update(disabled = True)
-                
+
             window['SELECT ALL'].update(disabled=True)
             window['DESELECT ALL'].update(disabled=True)
-        
+
             GuiWindow.window_handle = window
             out_params = OutputParameters(output_folder)
-            ileapp.crunch_artifacts(search_list, extracttype, input_path, out_params, len(ileapp.tosearch)/s_items)
-            
-            '''
-            if values[5] == True:
-                start = process_time()
-                logfunc('')
-                logfunc(f'CSV export starting. This might take a while...')
-                html2csv(out_params.report_folder_base) 
-                end = process_time()
-                csv_time_secs =  end - start
-                csv_time_HMS = strftime('%H:%M:%S', gmtime(csv_time_secs))
-                logfunc("CSV processing time = {}".format(csv_time_HMS))
-            '''
-            report_path = os.path.join(out_params.report_folder_base, 'index.html')
-            locationmessage = 'Report name: ' + report_path
-            sg.Popup('Processing completed', locationmessage)
-            
-            if report_path.startswith('\\\\?\\'): # windows
-                report_path = report_path[4:]
-            if report_path.startswith('\\\\'): # UNC path
-                report_path = report_path[2:]
-            webbrowser.open_new_tab('file://' + report_path)
+            crunch_successful = ileapp.crunch_artifacts(search_list, extracttype, input_path, out_params, len(ileapp.tosearch)/s_items)
+            if crunch_successful:
+                report_path = os.path.join(out_params.report_folder_base, 'index.html')
+                
+                if report_path.startswith('\\\\?\\'): # windows
+                    report_path = report_path[4:]
+                if report_path.startswith('\\\\'): # UNC path
+                    report_path = report_path[2:]
+                locationmessage = 'Report name: ' + report_path
+                sg.Popup('Processing completed', locationmessage)
+                webbrowser.open_new_tab('file://' + report_path)
+            else:
+                log_path = out_params.screen_output_file_path
+                if log_path.startswith('\\\\?\\'): # windows
+                    log_path = log_path[4:]
+                sg.Popup('Processing failed    :( ', f'See log for error details..\nLog file located at {log_path}')
             break
 window.close()

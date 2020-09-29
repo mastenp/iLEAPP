@@ -1,4 +1,4 @@
-aleapp_version = '1.2'
+aleapp_version = '1.6'
 
 # Contributors List
 # Format = [ Name, Blog-url, Twitter-handle, Github-url]
@@ -20,5 +20,11 @@ aleapp_contributors = [
     [ 'Shafik Punja', '', '@qubytelogic', ''],
     [ 'Cheeky4N6Monkey', 'https://cheeky4n6monkey.blogspot.com', '@Cheeky4n6Monkey', 'https://github.com/cheeky4n6monkey'],
     [ 'Edward Greybeard', '', '', 'https://github.com/edward-greybeard'],
-    [ 'Douglas Kein', '', '@DouglasKein', '']
+    [ 'Douglas Kein', '', '@DouglasKein', ''],
+    [ 'Claudia Meda', '', '@KlodiaMaida', 'https://github.com/KlodiaMaida'],
+    [ 'Silvia Spallarossa', '', '@SilviaSpallaro1', 'https://github.com/spatimbs'],
+    [ 'Francesca Maestri', '', '@franc3sca_m', 'https://github.com/francyM'],
+    [ 'Christopher Vance', 'https://blog.d204n6.com/', '@cScottVance', 'https://github.com/cScottVance'],
+    [ 'Jesse Spangenberger', 'https://cyberfenixtech.blogspot.com/', '@AzuleOnyx', 'https://github.com/flamusdiu'],
+    [ 'Jon Baumann', 'https://ciofecaforensics.com/', '@CiofecaForensic', 'https://github.com/threeplanetssoftware']
 ]

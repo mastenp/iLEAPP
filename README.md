@@ -1,9 +1,9 @@
 # iLEAPP
-iOS Logs, Events, And Preferences Parser  
+iOS Logs, Events, And Plists Parser  
 Details in blog post here: https://abrignoni.blogspot.com/2019/12/ileapp-ios-logs-events-and-properties.html
 
 Supports iOS 11, 12 & 13.
-Select parsing directly from a compressed .tar/.zip file or a decompressed directory.
+Select parsing directly from a compressed .tar/.zip file, or a decompressed directory, or an iTunes/Finder backup folder.
 
 ## Features
 
@@ -15,7 +15,7 @@ Parses:
 ⚙️ Screen icons list by screen and in grid order.  
 ⚙️ ApplicationState.db support for app bundle ID to data container GUID correlation.   
 ⚙️ User and computer names that the iOS device connected to. Function updated by Jack Farley (@JackFarley248, http://farleyforensics.com/).  
-⚙️ KnowldgeC + Powerlog artifacts.
+⚙️ KnowledgeC + Powerlog artifacts.
 And many, many more...
 
 
@@ -30,13 +30,26 @@ To install dependencies, run:
 pip install -r requirements.txt
 ```
 
-To install dependencies offline Troy Schnack has a neat process here:
-https://twitter.com/TroySchnack/status/1266085323651444736?s=19
-
 To run on **Linux**, you will also need to install `tkinter` separately like so:
 
 ```
 sudo apt-get install python3-tk
+```
+
+## Compile to executable
+
+To compile to an executable so you can run this on a system without python installed.
+
+To create ileapp.exe, run:
+
+```
+pyinstaller --onefile ileapp.spec
+````
+
+To create ileappGUI.exe, run:
+
+```
+pyinstaller --onefile --noconsole ileappGUI.spec
 ```
 
 ## Usage
@@ -44,7 +57,7 @@ sudo apt-get install python3-tk
 ### CLI
 
 ```
-$ python ileapp.py -t <zip | tar | fs> -i <path_to_extraction> -o <path_for_report_output>
+$ python ileapp.py -t <zip | tar | fs | gz | itunes> -i <path_to_extraction> -o <path_for_report_output>
 ```
 
 ### GUI
